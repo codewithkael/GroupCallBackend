@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #messages {
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            width: 300px;
+            padding: 10px;
+        }
+        button {
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h2>WebSocket Client Test</h2>
+
+<div id="messages">
+    <!-- Messages will be displayed here -->
+</div>
+
+<div id="input-container">
+    <input type="text" id="room-name" placeholder="Room Name" />
+    <input type="text" id="name" placeholder="Your Name" />
+    <button id="connect-btn">Connect</button>
+</div>
+
+<div id="chat-container" style="display: none;">
+    <div>
+        <input type="text" id="message-input" placeholder="Enter message" />
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script>
+    let socket;
+    let isConnected = false;
+
+    // Function to create a WebSocket connection
+    function connectToServer() {
+        const roomName = document.getElementById('room-name').value;
+        const userName = document.getElementById('name').value;
+
+        if (roomName && userName) {
+            // Connect to the server with the isCreator flag based on the checkbox state
+            socket = io('http://localhost:8080', {
+                query: {
+                    roomName: roomName,
+                    name: userName,
+                    userId:'test'
+                }
+            });
+
+            socket.on('connect', () => {
+                isConnected = true;
+                document.getElementById('chat-container').style.display = 'block';
+                document.getElementById('messages').innerHTML += `<p>Connected to room: ${roomName} as ${userName}</p>`;
+            });
+
+            socket.on('message', (data) => {
+                document.getElementById('messages').innerHTML += `<p><strong>${data.name}:</strong> ${data.message}</p>`;
+            });
+
+            socket.on('disconnect', () => {
+                isConnected = false;
+                document.getElementById('messages').innerHTML += `<p>You have been disconnected.</p>`;
+            });
+        } else {
+            alert('Please enter both room name and your name.');
+        }
+    }
+
+    // Function to send messages
+    function sendMessage() {
+        const message = document.getElementById('message-input').value;
+
+        if (message.trim() !== '' && isConnected) {
+            // Send message to the server
+            socket.emit('message', JSON.stringify(message));
+            document.getElementById('message-input').value = ''; // Clear input after sending
+        }
+    }
+
+    // Event listeners
+    document.getElementById('connect-btn').addEventListener('click', connectToServer);
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+</script>
+</body>
+</html>
