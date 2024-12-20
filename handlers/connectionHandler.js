@@ -63,7 +63,7 @@ class ConnectionHandler {
             .map(user => ({ userName: user.userName, userId: user.userId }));  // Send userName and userId
 
         // Send a message with the current users list
-        socket.emit('message', JSON.stringify({ command: 'room_users', users: usersInRoom }));
+        socket.emit('message', JSON.stringify({ command: 'room_users', data:{users:usersInRoom} }));
     }
 
     // Handle incoming message and broadcast to all clients in the room (except sender)
